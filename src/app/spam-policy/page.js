@@ -1,6 +1,9 @@
-'use client';
-
 import { Shield, AlertTriangle, AlertCircle, FileText, CheckCircle2, RefreshCw } from 'lucide-react';
+
+export const metadata = {
+  title: "Anti-Spam & Content Policy",
+  description: "Review the anti-spam regulations, compliance standards, and platform usage rules at Isha Software Solutions.",
+};
 
 export default function SpamPolicyPage() {
   const sections = [

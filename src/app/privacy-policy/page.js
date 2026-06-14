@@ -1,7 +1,10 @@
-'use client';
-
 import Link from 'next/link';
 import { Shield, Eye, Lock, Database, Info, FileText, ArrowRight } from 'lucide-react';
+
+export const metadata = {
+  title: "Privacy Policy",
+  description: "Read our Privacy Policy to understand how we collect, protect, and process user and campaign data at Isha Software Solutions.",
+};
 
 export default function PrivacyPolicyPage() {
   const points = [

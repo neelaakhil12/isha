@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export const metadata = {
-  title: "Our Services | Isha Software Solutions",
-  description: "Explore our Bulk Email campaigns, secure SMTP relays, real-time transactional emails, and AI-powered Email Extractor tool.",
+  title: "Premium Email Services & SMTP Relay",
+  description: "Explore our enterprise bulk email services, high-deliverability SMTP relays, real-time transactional emails, and powerful web-based email extractor tools.",
 };
 
 const serviceDetails = [
@@ -161,8 +161,77 @@ export default async function Services() {
     console.error('Error fetching services:', err);
   }
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Isha Software Solutions Services",
+    "numberOfItems": "4",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@type": "Service",
+          "name": "Bulk Email Service",
+          "description": "Send thousands of emails instantly with advanced campaign management, analytics, scheduling, and delivery optimization tools.",
+          "provider": {
+            "@type": "Organization",
+            "name": "Isha Software Solutions",
+            "url": "https://ishasoftwaresolution.com"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "item": {
+          "@type": "Service",
+          "name": "SMTP Service",
+          "description": "Reliable SMTP relay servers with secure authentication, fast email delivery, scalability, and enterprise-grade email sending infrastructure.",
+          "provider": {
+            "@type": "Organization",
+            "name": "Isha Software Solutions",
+            "url": "https://ishasoftwaresolution.com"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@type": "Service",
+          "name": "Transactional Email",
+          "description": "Deliver automated transactional emails such as OTPs, invoices, password resets, notifications, and order confirmations with high reliability.",
+          "provider": {
+            "@type": "Organization",
+            "name": "Isha Software Solutions",
+            "url": "https://ishasoftwaresolution.com"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "item": {
+          "@type": "Service",
+          "name": "Email Extractor Tool",
+          "description": "Extract targeted business emails and generate high-quality leads using intelligent filtering and advanced extraction technology.",
+          "provider": {
+            "@type": "Organization",
+            "name": "Isha Software Solutions",
+            "url": "https://ishasoftwaresolution.com"
+          }
+        }
+      }
+    ]
+  };
+
   return (
     <div className="bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
       {/* Page Header */}
       <section className="relative py-20 bg-slate-900 text-white overflow-hidden rounded-b-[50px] md:rounded-b-[80px]">
         {/* Background glow effects */}

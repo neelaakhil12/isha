@@ -1,7 +1,10 @@
-'use client';
-
 import { Shield, Hammer, FileText, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+
+export const metadata = {
+  title: "Terms of Service",
+  description: "Read the terms and conditions governing the use of SMTP, extraction, and marketing services at Isha Software Solutions.",
+};
 
 export default function TermsOfServicePage() {
   const points = [

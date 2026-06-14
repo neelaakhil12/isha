@@ -2,8 +2,8 @@ import { Target, Eye, Trophy, ShieldCheck, Users, MailCheck } from 'lucide-react
 import Link from 'next/link';
 
 export const metadata = {
-  title: "About Us | Isha Software Solutions",
-  description: "Learn about the mission, vision, expertise, and achievements of Isha Software Solutions in delivering powerful email systems.",
+  title: "About Our Mission & Vision",
+  description: "Learn about the mission, vision, expertise, and achievements of Isha Software Solutions in delivering powerful SMTP relays and bulk email systems.",
 };
 
 const achievements = [

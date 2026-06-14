@@ -11,6 +11,10 @@
 export const metadata = {
   title: 'Admin Panel | Isha Software Solutions',
   description: 'Restricted administrator access — Isha Software Solutions',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function AdminLayout({ children }) {

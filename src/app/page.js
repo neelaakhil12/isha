@@ -55,6 +55,11 @@ const whyChooseUs = [
   { title: "Scalable Infrastructure", desc: "Elastic mail queues built to process millions of transactions without breaking.", icon: Clock }
 ];
 
+export const metadata = {
+  title: "Premium Email Marketing & SMTP Platform",
+  description: "Isha Software Solutions is a powerful email marketing platform and SMTP relay service designed to automate communication and improve deliverability.",
+};
+
 export default async function Home() {
   let displayServices = services;
   let heroSlides = [];
