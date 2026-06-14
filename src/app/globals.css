@@ -80,3 +80,9 @@ html, body {
 .swiper-slide-active .hero-zoom-bg {
   transform: scale(1.08);
 }
+
+/* Hide volume controls on video elements */
+.no-audio-video::-webkit-media-controls-volume-control-container,
+.no-audio-video::-webkit-media-controls-mute-button {
+  display: none !important;
+}

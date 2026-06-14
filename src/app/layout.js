@@ -1,10 +1,6 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import AosInit from "@/components/AosInit";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
-import SplashScreen from "@/components/SplashScreen";
+import ClientShell from "@/components/ClientShell";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -22,14 +18,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased overflow-x-hidden w-full max-w-[100vw]`}>
       <body className="min-h-full flex flex-col bg-bg-custom text-text-dark selection:bg-accent selection:text-white overflow-x-hidden w-full max-w-[100vw]">
-        <SplashScreen />
-        <AosInit />
-        <Navbar />
-        <main className="flex-grow">
+        <ClientShell>
           {children}
-        </main>
-        <Footer />
-        <WhatsAppButton />
+        </ClientShell>
       </body>
     </html>
   );

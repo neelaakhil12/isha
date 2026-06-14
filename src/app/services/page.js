@@ -1,5 +1,6 @@
 import { Send, Server, Zap, Search, CheckCircle2, ArrowRight, Code, ShieldAlert, Activity, Filter, Key } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export const metadata = {
   title: "Our Services | Isha Software Solutions",
@@ -109,7 +110,57 @@ const serviceDetails = [
   }
 ];
 
-export default function Services() {
+const iconMap = {
+  "Bulk Email Service": Send,
+  "SMTP Service": Server,
+  "Transactional Email": Zap,
+  "Email Extractor Tool": Search,
+};
+
+const techSpecsMap = {
+  "Bulk Email Service": [
+    { label: "IP Options", value: "Shared Pools or Dedicated IPs" },
+    { label: "List Import", value: "CSV, JSON, Excel files" },
+    { label: "Design Tools", value: "WYSIWYG or Custom HTML Code" }
+  ],
+  "SMTP Service": [
+    { label: "Ports Supported", value: "25, 587, 465, 2525" },
+    { label: "Security Protocols", value: "TLS 1.3, SSL, SPF, DKIM, DMARC" },
+    { label: "API Latency", value: "< 120ms average" }
+  ],
+  "Transactional Email": [
+    { label: "Average Send Time", value: "under 1.5 seconds" },
+    { label: "Webhook Events", value: "Bounces, Spams, Clicks, Delivers" },
+    { label: "Fallback Protocol", value: "Automatic SMTP/API Failover" }
+  ],
+  "Email Extractor Tool": [
+    { label: "Extraction Formats", value: "CSV, XLSX, plain text" },
+    { label: "Filter Level", value: "Custom exclusions & domain exclusions" },
+    { label: "Accuracy", value: "98% valid business email parsing" }
+  ]
+};
+
+export default async function Services() {
+  let displayServices = serviceDetails;
+  try {
+    const { data, error } = await supabase.from('services').select('*').order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      displayServices = data.map(s => ({
+        id: s.id,
+        name: s.name,
+        icon: iconMap[s.name] || Send,
+        description: s.description,
+        features: s.features,
+        techSpecs: techSpecsMap[s.name] || [],
+        color: s.color,
+        href: s.href,
+        image_url: s.image_url
+      }));
+    }
+  } catch (err) {
+    console.error('Error fetching services:', err);
+  }
+
   return (
     <div className="bg-white">
       {/* Page Header */}
@@ -133,7 +184,7 @@ export default function Services() {
 
       {/* Main Service Sections */}
       <section className="py-12">
-        {serviceDetails.map((service, index) => {
+        {displayServices.map((service, index) => {
           const Icon = service.icon;
           const isEven = index % 2 === 0;
 
@@ -190,13 +241,14 @@ export default function Services() {
                     <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-100 bg-white group hover:scale-[1.02] transition-transform duration-500">
                       <img 
                         src={
-                          service.id === 'bulk' 
+                          service.image_url ||
+                          (service.id === 'bulk' || service.name === 'Bulk Email Service'
                             ? "/bulk_service.png" 
-                            : service.id === 'smtp' 
+                            : service.id === 'smtp' || service.name === 'SMTP Service'
                               ? "/smtp_service.png" 
-                              : service.id === 'transactional'
+                              : service.id === 'transactional' || service.name === 'Transactional Email'
                                 ? "/transactional_service.png"
-                                : "/extractor_service.png"
+                                : "/extractor_service.png")
                         } 
                         alt={`${service.name} Preview`} 
                         className="w-full h-auto object-cover"

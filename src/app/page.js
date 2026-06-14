@@ -9,6 +9,7 @@ import StatsCounter from '@/components/StatsCounter';
 import Testimonials from '@/components/Testimonials';
 import FaqSection from '@/components/FaqSection';
 import ServiceCard from '@/components/ServiceCard';
+import { supabase } from '@/lib/supabase';
 
 const services = [
   {
@@ -54,11 +55,29 @@ const whyChooseUs = [
   { title: "Scalable Infrastructure", desc: "Elastic mail queues built to process millions of transactions without breaking.", icon: Clock }
 ];
 
-export default function Home() {
+export default async function Home() {
+  let displayServices = services;
+  let heroSlides = [];
+  try {
+    const [servicesRes, slidesRes] = await Promise.all([
+      supabase.from('services').select('*').order('created_at', { ascending: true }),
+      supabase.from('hero_slides').select('*').order('order_index', { ascending: true })
+    ]);
+
+    if (!servicesRes.error && servicesRes.data && servicesRes.data.length > 0) {
+      displayServices = servicesRes.data;
+    }
+    if (!slidesRes.error && slidesRes.data && slidesRes.data.length > 0) {
+      heroSlides = slidesRes.data;
+    }
+  } catch (err) {
+    console.error('Error fetching database content:', err);
+  }
+
   return (
     <div className="relative">
       {/* 1. Hero Slider */}
-      <HeroSlider />
+      <HeroSlider initialSlides={heroSlides} />
 
       {/* 2. About Company Preview */}
       <section className="py-24 relative overflow-hidden bg-white">
@@ -148,7 +167,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {services.map((service, index) => (
+            {displayServices.map((service, index) => (
               <ServiceCard key={index} service={service} index={index} />
             ))}
           </div>

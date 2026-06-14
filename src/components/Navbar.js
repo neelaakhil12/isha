@@ -1,22 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, User, Loader2 } from 'lucide-react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const pathname = usePathname();
 
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Services', href: '/services' },
+    { name: 'Pricing', href: '/pricing' },
     { name: 'About Us', href: '/about' },
     { name: 'Contact', href: '/contact' }
   ];
 
   const isActive = (path) => pathname === path;
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Navbar session check error:', err);
+      } finally {
+        setSessionLoading(false);
+      }
+    }
+    checkSession();
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+    window.location.href = '/login';
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm py-2 transition-all duration-300">
@@ -50,20 +78,46 @@ export default function Navbar() {
 
           {/* Desktop Auth CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              href="/login" 
-              className="text-text-dark/85 hover:text-primary font-semibold px-4 py-2 transition-colors duration-300"
-            >
-              Sign In
-            </Link>
-            <Link 
-              href="/contact" 
-              className="relative inline-flex items-center justify-center p-0.5 overflow-hidden font-bold rounded-full group bg-gradient-to-br from-primary to-accent hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-purple-300"
-            >
-              <span className="relative px-6 py-2 transition-all ease-in duration-75 bg-bg-custom rounded-full group-hover:bg-transparent text-primary group-hover:text-white">
-                Get Started
-              </span>
-            </Link>
+            {sessionLoading ? (
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            ) : user ? (
+              <div className="flex items-center space-x-4">
+                <Link 
+                  href="/account" 
+                  className="flex items-center space-x-2 text-text-dark/85 hover:text-primary font-bold transition-all"
+                >
+                  <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black uppercase text-xs border border-primary/20">
+                    {user.name.slice(0, 2)}
+                  </span>
+                  <span className="text-sm">Account</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-bold text-red-500 hover:bg-red-50 px-3.5 py-2 rounded-xl border border-red-100 transition-all cursor-pointer"
+                >
+                  Log Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  className="text-text-dark/85 hover:text-primary font-semibold px-4 py-2 transition-colors duration-300"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className="relative inline-flex items-center justify-center p-0.5 overflow-hidden font-bold rounded-full group bg-gradient-to-br from-primary to-accent hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-purple-300"
+                >
+                  <span className="relative px-6 py-2 transition-all ease-in duration-75 bg-bg-custom rounded-full group-hover:bg-transparent text-primary group-hover:text-white">
+                    Get Started
+                  </span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -98,20 +152,47 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="pt-4 border-t border-text-dark/10 flex flex-col space-y-2 px-3">
-              <Link 
-                href="/login" 
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center font-semibold py-2 text-text-dark/80 hover:text-primary border border-text-dark/10 rounded-full"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/contact" 
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center bg-gradient-to-r from-primary to-accent text-white font-semibold py-2 rounded-full shadow-md shadow-primary/20"
-              >
-                Get Started
-              </Link>
+              {sessionLoading ? (
+                <div className="w-full flex justify-center py-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              ) : user ? (
+                <>
+                  <Link 
+                    href="/account" 
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center font-bold py-2.5 bg-primary/10 text-primary rounded-full flex items-center justify-center space-x-2"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center font-black uppercase text-[10px]">
+                      {user.name.slice(0, 2)}
+                    </span>
+                    <span>My Account</span>
+                  </Link>
+                  <button
+                    onClick={() => { setIsOpen(false); handleLogout(); }}
+                    className="w-full text-center text-red-500 font-bold py-2 hover:bg-red-50 border border-red-100 rounded-full cursor-pointer transition-all"
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/login" 
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center font-semibold py-2 text-text-dark/80 hover:text-primary border border-text-dark/10 rounded-full"
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    href="/contact" 
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center bg-gradient-to-r from-primary to-accent text-white font-semibold py-2 rounded-full shadow-md shadow-primary/20"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

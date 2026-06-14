@@ -49,6 +49,7 @@ export default function Footer() {
               <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
               <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
               <li><Link href="/services" className="hover:text-primary transition-colors">Services</Link></li>
+              <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
               <li><Link href="/login" className="hover:text-primary transition-colors">Client Portal</Link></li>
             </ul>
@@ -109,9 +110,9 @@ export default function Footer() {
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
           <p>© {new Date().getFullYear()} Isha Software Solutions. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-primary transition-colors">Security Policy</a>
+            <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link href="/spam-policy" className="hover:text-primary transition-colors">Spam Policy</Link>
           </div>
         </div>
       </div>

@@ -18,10 +18,18 @@ const iconMap = {
   Search,
 };
 
+const nameToIconKey = {
+  "Bulk Email Service": "Send",
+  "SMTP Service": "Server",
+  "Transactional Email": "Zap",
+  "Email Extractor Tool": "Search",
+};
+
 export default function ServiceCard({ service, index }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const Icon = iconMap[service.iconName] || Send;
-  const imageSrc = imageMap[service.name] || "/bulk_service.png";
+  const iconKey = service.iconName || nameToIconKey[service.name] || "Send";
+  const Icon = iconMap[iconKey] || Send;
+  const imageSrc = service.image_url || imageMap[service.name] || "/bulk_service.png";
 
   // Lock body scroll when modal is open
   useEffect(() => {

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Server } from 'lucide-react';
+import { Mail, Key, ArrowRight, ShieldCheck, Zap, Server, RefreshCw } from 'lucide-react';
 
 export default function Login() {
-  const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
-  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: '' });
+  const [otpCode, setOtpCode] = useState('');
+  const [step, setStep] = useState('email'); // 'email' or 'otp'
   const [status, setStatus] = useState({ loading: false, success: false, error: null });
+  const [googleInitialized, setGoogleInitialized] = useState(false);
 
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -17,14 +19,125 @@ export default function Login() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Google credential callback
+  const handleGoogleCredentialResponse = async (response) => {
+    setStatus({ loading: true, success: false, error: null });
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Google authentication failed.');
+      }
+
+      setStatus({ loading: false, success: true, error: null });
+      setTimeout(() => {
+        window.location.href = '/account';
+      }, 1500);
+    } catch (err) {
+      setStatus({ loading: false, success: false, error: err.message });
+    }
+  };
+
+  // Dynamically load the Google GIS SDK script
+  useEffect(() => {
+    if (window.google?.accounts?.id) {
+      setGoogleInitialized(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setGoogleInitialized(true);
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Initialize and render the Google login button
+  useEffect(() => {
+    if (!googleInitialized) return;
+
+    try {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholder-google-client-id.apps.googleusercontent.com';
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+      });
+
+      const btnParent = document.getElementById('google-signin-btn');
+      if (btnParent) {
+        window.google.accounts.id.renderButton(btnParent, {
+          theme: 'outline',
+          size: 'large',
+          width: btnParent.offsetWidth || 380,
+          text: 'signin_with',
+          shape: 'rectangular',
+        });
+      }
+    } catch (err) {
+      console.error('Google initialization error:', err);
+    }
+  }, [googleInitialized, step]); // Re-render button if step changes (since container gets remounted)
+
+  // Send OTP handler
+  const handleSendOTP = async (e) => {
+    if (e) e.preventDefault();
     setStatus({ loading: true, success: false, error: null });
 
-    // Mock Authentication delay
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send verification code.');
+      }
+
+      setStep('otp');
+      setStatus({ loading: false, success: false, error: null });
+    } catch (err) {
+      setStatus({ loading: false, success: false, error: err.message });
+    }
+  };
+
+  // Verify OTP handler
+  const handleVerifyOTP = async (e) => {
+    if (e) e.preventDefault();
+    setStatus({ loading: true, success: false, error: null });
+
+    try {
+      const res = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, otp: otpCode }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid or expired verification code.');
+      }
+
       setStatus({ loading: false, success: true, error: null });
-    }, 1500);
+      setTimeout(() => {
+        window.location.href = '/account';
+      }, 1500);
+    } catch (err) {
+      setStatus({ loading: false, success: false, error: err.message });
+    }
   };
 
   return (
@@ -44,6 +157,18 @@ export default function Login() {
             <p className="text-slate-500 text-sm">Log in to manage your SMTP server metrics and marketing campaigns.</p>
           </div>
 
+          {status.error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-semibold border border-red-100 flex items-center justify-between animate-fade-in">
+              <span>{status.error}</span>
+              <button 
+                onClick={() => setStatus(prev => ({ ...prev, error: null }))}
+                className="text-red-400 hover:text-red-600 font-bold ml-2 focus:outline-none"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {status.success ? (
             <div className="bg-highlight/5 border border-highlight/20 p-8 rounded-3xl text-center flex flex-col items-center animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-highlight/15 text-highlight flex items-center justify-center mb-4">
@@ -56,96 +181,116 @@ export default function Login() {
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-text-dark mb-2">Workspace Email</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 pl-11 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                    placeholder="name@company.com"
-                    required
-                  />
-                  <Mail className="w-4.5 h-4.5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
+            <>
+              {step === 'email' ? (
+                <form onSubmit={handleSendOTP} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-text-dark mb-2">Workspace Email</label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full border border-slate-200 rounded-2xl px-4 py-3 pl-11 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="name@company.com"
+                        required
+                      />
+                      <Mail className="w-4.5 h-4.5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-semibold text-text-dark">Password</label>
-                  <a href="#" className="text-xs font-bold text-primary hover:text-primary-hover transition-colors">
-                    Forgot Password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 pl-11 pr-11 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                    placeholder="••••••••"
-                    required
-                  />
-                  <Lock className="w-4.5 h-4.5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-text-dark absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
+                    type="submit"
+                    disabled={status.loading}
+                    className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
                   >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    {status.loading ? (
+                      <span>Sending verification code...</span>
+                    ) : (
+                      <>
+                        <span>Send Verification Code</span>
+                        <ArrowRight className="w-4.5 h-4.5" />
+                      </>
+                    )}
                   </button>
-                </div>
-              </div>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-text-dark mb-2">Workspace Email</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="email"
+                        value={formData.email}
+                        disabled
+                        className="w-full border border-slate-100 bg-slate-50 text-slate-400 rounded-2xl px-4 py-3 text-sm cursor-not-allowed"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep('email');
+                          setStatus(prev => ({ ...prev, error: null }));
+                        }}
+                        className="text-xs font-bold text-primary hover:text-primary-hover py-3 px-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shrink-0 cursor-pointer"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Remember Me */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-200 accent-primary"
-                  />
-                  <span className="font-medium text-xs select-none">Remember this device for 30 days</span>
-                </label>
-              </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-semibold text-text-dark">Verification Code (OTP)</label>
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        className="text-xs font-bold text-primary hover:text-primary-hover transition-colors flex items-center space-x-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Resend Code</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="otp"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className="w-full border border-slate-200 rounded-2xl px-4 py-3 pl-11 text-sm tracking-[0.25em] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="••••••"
+                        required
+                      />
+                      <Key className="w-4.5 h-4.5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={status.loading}
-                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-              >
-                {status.loading ? (
-                  <span>Securing Authentication...</span>
-                ) : (
-                  <>
-                    <span>Enter Cockpit Portal</span>
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </>
-                )}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={status.loading || otpCode.length !== 6}
+                    className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {status.loading ? (
+                      <span>Verifying...</span>
+                    ) : (
+                      <>
+                        <span>Verify & Enter Cockpit</span>
+                        <ArrowRight className="w-4.5 h-4.5" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </>
           )}
 
-          {/* Social authentication placeholder */}
+          {/* Social authentication section */}
           <div className="mt-8 border-t border-slate-100 pt-6">
             <div className="relative flex justify-center mb-6">
               <span className="bg-white px-4 text-xs font-semibold text-slate-400 absolute -top-2">OR CONTINUE WITH</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center space-x-2 border border-slate-150 rounded-2xl py-3 hover:bg-slate-50 transition-colors text-sm font-bold text-text-dark cursor-pointer">
-                <span className="w-4 h-4 bg-red-500 rounded-full shrink-0" />
-                <span>Google</span>
-              </button>
-              <button className="flex items-center justify-center space-x-2 border border-slate-150 rounded-2xl py-3 hover:bg-slate-50 transition-colors text-sm font-bold text-text-dark cursor-pointer">
-                <span className="w-4 h-4 bg-slate-900 rounded-full shrink-0" />
-                <span>GitHub</span>
-              </button>
+            <div className="flex justify-center w-full">
+              <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
             </div>
           </div>
         </div>
