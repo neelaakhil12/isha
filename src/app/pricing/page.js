@@ -224,7 +224,7 @@ export default function PricingPage() {
     }
 
     const planAmountInPaise = Math.round(priceVal * 100);
-    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SzAYkH6cKTT6UE';
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_T1nsK0LcyKp0yF';
 
     const options = {
       key: rzpKey,
