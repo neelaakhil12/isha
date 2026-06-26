@@ -26,7 +26,8 @@ const faqs = [
   }
 ];
 
-export default function FaqSection() {
+export default function FaqSection({ initialFaqs }) {
+  const displayFaqs = initialFaqs && initialFaqs.length > 0 ? initialFaqs : faqs;
   const [activeIndex, setActiveIndex] = useState(null);
 
   const toggleFaq = (index) => {
@@ -53,7 +54,7 @@ export default function FaqSection() {
         </div>
 
         <div className="space-y-4" data-aos="fade-up" data-aos-delay="100">
-          {faqs.map((faq, index) => {
+          {displayFaqs.map((faq, index) => {
             const isOpen = activeIndex === index;
             return (
               <div 

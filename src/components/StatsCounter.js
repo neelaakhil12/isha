@@ -1,40 +1,48 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mail, ShieldCheck, Users, Headphones } from 'lucide-react';
+import * as Lucide from 'lucide-react';
 
-const stats = [
+const defaultStats = [
   {
     targetNum: 10000,
     suffix: "+",
     label: "Campaigns Sent",
-    icon: Mail,
+    icon: Lucide.Mail,
     color: "from-primary to-accent"
   },
   {
     targetNum: 5000,
     suffix: "+",
     label: "Happy Clients",
-    icon: Users,
+    icon: Lucide.Users,
     color: "from-secondary to-accent"
   },
   {
     targetNum: 99,
     suffix: "%",
     label: "Delivery Success",
-    icon: ShieldCheck,
+    icon: Lucide.ShieldCheck,
     color: "from-highlight to-primary"
   },
   {
     targetText: "24/7",
     label: "Technical Support",
-    icon: Headphones,
+    icon: Lucide.Headphones,
     color: "from-accent to-secondary"
   }
 ];
 
-export default function StatsCounter() {
-  const [counts, setCounts] = useState([0, 0, 0]);
+export default function StatsCounter({ initialStats }) {
+  const displayStats = initialStats && initialStats.length > 0 ? initialStats : defaultStats;
+
+  // Find all stats that have numerical target values to animate
+  const animatableStats = displayStats.filter(s => {
+    const num = s.targetNum !== undefined ? s.targetNum : s.target_num;
+    return num !== null && num !== undefined && !isNaN(Number(num));
+  });
+
+  const [counts, setCounts] = useState(() => animatableStats.map(() => 0));
   const sectionRef = useRef(null);
   const hasAnimated = useRef(false);
 
@@ -48,18 +56,19 @@ export default function StatsCounter() {
       if (inView) {
         hasAnimated.current = true;
         
-        const durations = [1500, 1500, 1500];
+        const duration = 1500;
         const steps = 40;
+        const intervalTime = duration / steps;
         
-        stats.slice(0, 3).forEach((stat, i) => {
+        animatableStats.forEach((stat, i) => {
           let current = 0;
-          const increment = stat.targetNum / steps;
-          const intervalTime = durations[i] / steps;
+          const target = Number(stat.targetNum !== undefined ? stat.targetNum : stat.target_num);
+          const increment = target / steps;
           
           const timer = setInterval(() => {
             current += increment;
-            if (current >= stat.targetNum) {
-              current = stat.targetNum;
+            if (current >= target) {
+              current = target;
               clearInterval(timer);
             }
             setCounts(prev => {
@@ -76,13 +85,10 @@ export default function StatsCounter() {
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [animatableStats]);
 
   const formatNumber = (num, i) => {
-    if (i === 0 && num >= 1000) {
-      return (num / 1000).toFixed(0) + "K";
-    }
-    if (i === 1 && num >= 1000) {
+    if (num >= 1000) {
       return (num / 1000).toFixed(0) + "K";
     }
     return num.toString();
@@ -96,11 +102,21 @@ export default function StatsCounter() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
-          {stats.map((stat, i) => {
-            const Icon = stat.icon;
-            const displayValue = i < 3 
-              ? formatNumber(counts[i], i) + stat.suffix 
-              : stat.targetText;
+          {displayStats.map((stat, i) => {
+            const Icon = stat.icon || Lucide[stat.icon_name] || Lucide.Mail;
+            
+            const targetNum = stat.targetNum !== undefined ? stat.targetNum : stat.target_num;
+            const targetText = stat.targetText !== undefined ? stat.targetText : stat.target_text;
+            const suffix = stat.suffix || '';
+            const color = stat.color || 'from-primary to-accent';
+
+            // Check if this stat is animatable
+            const animIndex = animatableStats.indexOf(stat);
+            const isAnimated = animIndex !== -1;
+            
+            const displayValue = isAnimated
+              ? formatNumber(counts[animIndex], i) + suffix
+              : (targetText || (targetNum !== null ? formatNumber(targetNum, i) + suffix : ''));
 
             return (
               <div 
@@ -110,12 +126,12 @@ export default function StatsCounter() {
                 data-aos-delay={i * 100}
               >
                 {/* Icon box */}
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 rounded-lg md:rounded-2xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white mb-3 md:mb-6 shadow-lg shadow-primary/15 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 rounded-lg md:rounded-2xl bg-gradient-to-r ${color} flex items-center justify-center text-white mb-3 md:mb-6 shadow-lg shadow-primary/15 group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-4 h-4 md:w-6 md:h-6" />
                 </div>
                 
                 {/* Number */}
-                <h3 className={`text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black mb-1 md:mb-3 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                <h3 className={`text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black mb-1 md:mb-3 bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
                   {displayValue}
                 </h3>
                 

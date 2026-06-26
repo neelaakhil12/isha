@@ -1,19 +1,97 @@
-import { Target, Eye, Trophy, ShieldCheck, Users, MailCheck } from 'lucide-react';
+import * as Lucide from 'lucide-react';
+import { Target, Eye, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export const metadata = {
   title: "About Our Mission & Vision",
   description: "Learn about the mission, vision, expertise, and achievements of Isha Software Solutions in delivering powerful SMTP relays and bulk email systems.",
 };
 
-const achievements = [
-  { value: "5B+", label: "Emails Successfully Routed", icon: MailCheck, color: "text-primary" },
-  { value: "99.8%", label: "Average Delivery Rate", icon: ShieldCheck, color: "text-highlight" },
-  { value: "120+", label: "Dedicated Server Clusters", icon: Trophy, color: "text-secondary" },
-  { value: "10K+", label: "Active Enterprise Clients", icon: Users, color: "text-accent" },
-];
+export default async function About() {
+  // Default values
+  let headers = {
+    header_title: "Powering Smart Digital Outreach",
+    header_description: "Isha Software Solutions delivers secure, high-reputation SMTP networks and marketing tools that help scaling companies talk to their clients.",
+    intro_title: "Next-Generation Email Solutions Crafted for Scalability",
+    intro_desc_1: "Founded with the goal of breaking vendor lock-ins in the marketing automation space, Isha Software Solutions has grown into a premier provider of email systems for digital agencies, developers, and global brands.",
+    intro_desc_2: "We design software that eliminates complex billing rules. By offering fixed-price and volume-based SMTP services alongside smart extractor and bulk template capabilities, we give businesses the freedom to build outbound campaigns their way."
+  };
 
-export default function About() {
+  const defaultIdeals = [
+    { title: "Reputation First", description: "We manage IP warm-ups and routing lists to keep sender reputation at peak." },
+    { title: "Developer Freedom", description: "Fully compliant REST APIs and SMTP relays that fit in any codebase in minutes." },
+    { title: "Fair Pricing Structures", description: "No penalties for having larger contact lists. Pay only for the messages you send." }
+  ];
+
+  let ideals = null;
+
+  let missionVision = {
+    mission_text: "To simplify high-volume digital mailing by delivering reliable, self-scalable SMTP relays and analytical campaign creators. We aim to maximize delivery rates while lowering billing barriers for expanding businesses.",
+    vision_text: "To stand as the leading global infrastructure network for automated and transactional email deliveries, ensuring that every startup and growing enterprise can send and track outreach with zero speed limits."
+  };
+
+  let expertiseHeader = {
+    title: "Built by Mail System Experts",
+    description: "Our engineers focus on the specialized routing systems required to maintain high inbox deliverability."
+  };
+
+  const defaultExpertiseCards = [
+    { title: "IP Reputation Management", description: "We monitor blacklist states and manage automated IP warm-ups to ensure your sending blocks are recognized as legitimate by ISPs." },
+    { title: "API Delivery Pipelines", description: "Our REST endpoints utilize distributed queuing arrays, meaning massive spikes in transactional requests are routed with zero message drops." },
+    { title: "Lead Extraction Filtration", description: "Our advanced filters look for spam traps, catch-all servers, and inactive email structures, saving you from bounces and ISP blocks." }
+  ];
+
+  let expertiseCards = null;
+
+  const defaultAchievements = [
+    { value: "5B+", label: "Emails Successfully Routed", icon_name: "MailCheck", color: "text-primary" },
+    { value: "99.8%", label: "Average Delivery Rate", icon_name: "ShieldCheck", color: "text-highlight" },
+    { value: "120+", label: "Dedicated Server Clusters", icon_name: "Trophy", color: "text-secondary" },
+    { value: "10K+", label: "Active Enterprise Clients", icon_name: "Users", color: "text-accent" },
+  ];
+
+  let displayAchievements = null;
+
+  try {
+    const [
+      headersRes,
+      idealsRes,
+      mvRes,
+      expHeaderRes,
+      expCardsRes,
+      achRes
+    ] = await Promise.all([
+      supabase.from('about_page_headers').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('about_page_ideals').select('*').order('order_index', { ascending: true }),
+      supabase.from('about_page_mission_vision').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('about_page_expertise').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('about_page_expertise_cards').select('*').order('order_index', { ascending: true }),
+      supabase.from('about_page_achievements').select('*').order('order_index', { ascending: true })
+    ]);
+
+    if (!headersRes.error && headersRes.data) {
+      headers = headersRes.data;
+    }
+    if (!idealsRes.error && idealsRes.data && idealsRes.data.length > 0) {
+      ideals = idealsRes.data;
+    }
+    if (!mvRes.error && mvRes.data) {
+      missionVision = mvRes.data;
+    }
+    if (!expHeaderRes.error && expHeaderRes.data) {
+      expertiseHeader = expHeaderRes.data;
+    }
+    if (!expCardsRes.error && expCardsRes.data && expCardsRes.data.length > 0) {
+      expertiseCards = expCardsRes.data;
+    }
+    if (!achRes.error && achRes.data && achRes.data.length > 0) {
+      displayAchievements = achRes.data;
+    }
+  } catch (err) {
+    console.error('Error loading About Page content:', err);
+  }
+
   return (
     <div className="py-12 bg-white">
       {/* Page Header */}
@@ -27,10 +105,10 @@ export default function About() {
             Who We Are
           </span>
           <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight tracking-tight bg-gradient-to-r from-white via-slate-100 to-secondary bg-clip-text text-transparent">
-            Powering Smart Digital Outreach
+            {headers.header_title}
           </h1>
           <p className="max-w-2xl mx-auto text-slate-300 text-lg md:text-xl leading-relaxed">
-            Isha Software Solutions delivers secure, high-reputation SMTP networks and marketing tools that help scaling companies talk to their clients.
+            {headers.header_description}
           </p>
         </div>
       </section>
@@ -43,13 +121,13 @@ export default function About() {
               Introduction
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-text-dark mt-4 mb-6">
-              Next-Generation Email Solutions Crafted for Scalability
+              {headers.intro_title}
             </h2>
             <p className="text-slate-600 text-base leading-relaxed mb-6">
-              Founded with the goal of breaking vendor lock-ins in the marketing automation space, Isha Software Solutions has grown into a premier provider of email systems for digital agencies, developers, and global brands.
+              {headers.intro_desc_1}
             </p>
             <p className="text-slate-600 text-base leading-relaxed mb-6">
-              We design software that eliminates complex billing rules. By offering fixed-price and volume-based SMTP services alongside smart extractor and bulk template capabilities, we give businesses the freedom to build outbound campaigns their way.
+              {headers.intro_desc_2}
             </p>
           </div>
 
@@ -58,27 +136,19 @@ export default function About() {
             <div className="glass border border-slate-100 p-8 rounded-3xl shadow-xl flex flex-col justify-center bg-white/70">
               <h3 className="text-xl font-bold text-text-dark mb-4 border-b pb-3">Core Ideals We Work By:</h3>
               <ul className="space-y-4">
-                <li className="flex items-start space-x-3">
-                  <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">1</span>
-                  <div>
-                    <h4 className="font-bold text-text-dark">Reputation First</h4>
-                    <p className="text-xs text-slate-500">We manage IP warm-ups and routing lists to keep sender reputation at peak.</p>
-                  </div>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <span className="w-6 h-6 rounded-full bg-secondary/10 text-secondary flex items-center justify-center shrink-0 mt-0.5 font-bold">2</span>
-                  <div>
-                    <h4 className="font-bold text-text-dark">Developer Freedom</h4>
-                    <p className="text-xs text-slate-500">Fully compliant REST APIs and SMTP relays that fit in any codebase in minutes.</p>
-                  </div>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <span className="w-6 h-6 rounded-full bg-highlight/10 text-highlight flex items-center justify-center shrink-0 mt-0.5 font-bold">3</span>
-                  <div>
-                    <h4 className="font-bold text-text-dark">Fair Pricing Structures</h4>
-                    <p className="text-xs text-slate-500">No penalties for having larger contact lists. Pay only for the messages you send.</p>
-                  </div>
-                </li>
+                {(ideals || defaultIdeals).map((ideal, idx) => (
+                  <li key={idx} className="flex items-start space-x-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 font-bold ${
+                      idx === 0 ? 'bg-primary/10 text-primary' : idx === 1 ? 'bg-secondary/10 text-secondary' : 'bg-highlight/10 text-highlight'
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-text-dark">{ideal.title}</h4>
+                      <p className="text-xs text-slate-500">{ideal.description}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -98,7 +168,7 @@ export default function About() {
               </div>
               <h3 className="text-2xl font-bold text-text-dark mb-4">Our Mission</h3>
               <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                To simplify high-volume digital mailing by delivering reliable, self-scalable SMTP relays and analytical campaign creators. We aim to maximize delivery rates while lowering billing barriers for expanding businesses.
+                {missionVision.mission_text}
               </p>
             </div>
 
@@ -112,7 +182,7 @@ export default function About() {
               </div>
               <h3 className="text-2xl font-bold text-text-dark mb-4">Our Vision</h3>
               <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                To stand as the leading global infrastructure network for automated and transactional email deliveries, ensuring that every startup and growing enterprise can send and track outreach with zero speed limits.
+                {missionVision.vision_text}
               </p>
             </div>
           </div>
@@ -126,32 +196,22 @@ export default function About() {
             Expertise
           </span>
           <h2 className="text-3xl md:text-4xl font-extrabold text-text-dark mt-4 mb-4">
-            Built by Mail System Experts
+            {expertiseHeader.title}
           </h2>
           <p className="text-slate-600 text-lg">
-            Our engineers focus on the specialized routing systems required to maintain high inbox deliverability.
+            {expertiseHeader.description}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 border border-slate-100 rounded-3xl bg-white hover:border-primary/20 transition-all text-center" data-aos="fade-up">
-            <h4 className="font-extrabold text-text-dark text-lg mb-3">IP Reputation Management</h4>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              We monitor blacklist states and manage automated IP warm-ups to ensure your sending blocks are recognized as legitimate by ISPs.
-            </p>
-          </div>
-          <div className="p-8 border border-slate-100 rounded-3xl bg-white hover:border-primary/20 transition-all text-center" data-aos="fade-up" data-aos-delay="100">
-            <h4 className="font-extrabold text-text-dark text-lg mb-3">API Delivery Pipelines</h4>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Our REST endpoints utilize distributed queuing arrays, meaning massive spikes in transactional requests are routed with zero message drops.
-            </p>
-          </div>
-          <div className="p-8 border border-slate-100 rounded-3xl bg-white hover:border-primary/20 transition-all text-center" data-aos="fade-up" data-aos-delay="200">
-            <h4 className="font-extrabold text-text-dark text-lg mb-3">Lead Extraction Filtration</h4>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Our advanced filters look for spam traps, catch-all servers, and inactive email structures, saving you from bounces and ISP blocks.
-            </p>
-          </div>
+          {(expertiseCards || defaultExpertiseCards).map((card, idx) => (
+            <div key={idx} className="p-8 border border-slate-100 rounded-3xl bg-white hover:border-primary/20 transition-all text-center" data-aos="fade-up" data-aos-delay={idx * 100}>
+              <h4 className="font-extrabold text-text-dark text-lg mb-3">{card.title}</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                {card.description}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -175,8 +235,9 @@ export default function About() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            {achievements.map((item, i) => {
-              const Icon = item.icon;
+            {(displayAchievements || defaultAchievements).map((item, i) => {
+              const Icon = Lucide[item.icon_name] || Trophy;
+              const color = item.color || 'text-primary';
               return (
                 <div 
                   key={i} 
@@ -184,7 +245,7 @@ export default function About() {
                   data-aos="fade-up"
                   data-aos-delay={i * 100}
                 >
-                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-slate-800 flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform ${item.color}`}>
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-slate-800 flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform ${color}`}>
                     <Icon className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
                   <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-1 md:mb-2 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">

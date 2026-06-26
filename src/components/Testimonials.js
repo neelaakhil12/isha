@@ -38,7 +38,9 @@ const testimonials = [
   }
 ];
 
-export default function Testimonials() {
+export default function Testimonials({ initialTestimonials }) {
+  const displayTestimonials = initialTestimonials && initialTestimonials.length > 0 ? initialTestimonials : testimonials;
+
   return (
     <section className="py-24 relative overflow-hidden bg-slate-50">
       {/* Abstract decorative elements */}
@@ -75,39 +77,42 @@ export default function Testimonials() {
             }}
             className="pb-14"
           >
-            {testimonials.map((item, index) => (
-              <SwiperSlide key={index} className="h-auto">
-                <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col justify-between h-full relative group">
-                  <div>
-                    {/* Rating stars */}
-                    <div className="flex space-x-1 mb-6">
-                      {[...Array(item.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-secondary text-secondary" />
-                      ))}
-                    </div>
-
-                    {/* Quote Icon */}
-                    <Quote className="w-10 h-10 text-accent/15 absolute right-8 top-8 group-hover:scale-110 transition-transform duration-300" />
-                    
-                    {/* Text */}
-                    <p className="text-slate-600 leading-relaxed mb-6 italic">
-                      "{item.quote}"
-                    </p>
-                  </div>
-
-                  {/* Profile info */}
-                  <div className="flex items-center space-x-4 border-t border-slate-100 pt-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-bold text-lg shadow-md shadow-primary/10">
-                      {item.avatar}
-                    </div>
+            {displayTestimonials.map((item, index) => {
+              const rating = Math.max(0, Math.min(5, Number(item.rating !== undefined ? item.rating : 5)));
+              return (
+                <SwiperSlide key={index} className="h-auto">
+                  <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col justify-between h-full relative group">
                     <div>
-                      <h4 className="font-bold text-text-dark">{item.author}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{item.role}</p>
+                      {/* Rating stars */}
+                      <div className="flex space-x-1 mb-6">
+                        {[...Array(rating)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 fill-secondary text-secondary" />
+                        ))}
+                      </div>
+
+                      {/* Quote Icon */}
+                      <Quote className="w-10 h-10 text-accent/15 absolute right-8 top-8 group-hover:scale-110 transition-transform duration-300" />
+                      
+                      {/* Text */}
+                      <p className="text-slate-600 leading-relaxed mb-6 italic">
+                        "{item.quote}"
+                      </p>
+                    </div>
+
+                    {/* Profile info */}
+                    <div className="flex items-center space-x-4 border-t border-slate-100 pt-6">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-bold text-lg shadow-md shadow-primary/10 select-none">
+                        {item.avatar || item.author?.charAt(0) || 'S'}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-text-dark">{item.author}</h4>
+                        <p className="text-xs text-slate-500 font-medium">{item.role}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
+                </SwiperSlide>
+              );
+            })}
           </Swiper>
         </div>
       </div>

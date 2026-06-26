@@ -1,9 +1,6 @@
 import Link from 'next/link';
-import { 
-  Send, Server, Zap, Search, ShieldCheck, 
-  Settings, CheckCircle2, Clock, PhoneCall, 
-  Coins, BarChart3, HelpCircle, ArrowRight
-} from 'lucide-react';
+import * as Lucide from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import HeroSlider from '@/components/HeroSlider';
 import StatsCounter from '@/components/StatsCounter';
 import Testimonials from '@/components/Testimonials';
@@ -47,12 +44,12 @@ const services = [
 ];
 
 const whyChooseUs = [
-  { title: "Fast & Secure Platform", desc: "Enterprise-grade security protocols alongside multi-node fast delivery networks.", icon: ShieldCheck },
-  { title: "High Email Deliverability", desc: "Engineered to bypass spam filters and land directly in user inboxes.", icon: CheckCircle2 },
-  { title: "Advanced Automation", desc: "Build intricate drip sequences and behavior-based automated emails.", icon: Settings },
-  { title: "Affordable Solutions", desc: "Pay for what you send. Flexible packages crafted to scale with your budget.", icon: Coins },
-  { title: "24/7 Dedicated Support", desc: "A team of expert system admins is ready to assist you at any time of day.", icon: PhoneCall },
-  { title: "Scalable Infrastructure", desc: "Elastic mail queues built to process millions of transactions without breaking.", icon: Clock }
+  { title: "Fast & Secure Platform", desc: "Enterprise-grade security protocols alongside multi-node fast delivery networks.", icon: Lucide.ShieldCheck },
+  { title: "High Email Deliverability", desc: "Engineered to bypass spam filters and land directly in user inboxes.", icon: Lucide.CheckCircle2 },
+  { title: "Advanced Automation", desc: "Build intricate drip sequences and behavior-based automated emails.", icon: Lucide.Settings },
+  { title: "Affordable Solutions", desc: "Pay for what you send. Flexible packages crafted to scale with your budget.", icon: Lucide.Coins },
+  { title: "24/7 Dedicated Support", desc: "A team of expert system admins is ready to assist you at any time of day.", icon: Lucide.PhoneCall },
+  { title: "Scalable Infrastructure", desc: "Elastic mail queues built to process millions of transactions without breaking.", icon: Lucide.Clock }
 ];
 
 export const metadata = {
@@ -63,10 +60,40 @@ export const metadata = {
 export default async function Home() {
   let displayServices = services;
   let heroSlides = [];
+  let displayAbout = {
+    badge: "About The Company",
+    title: "Empowering Smart Businesses with Advanced Email Solutions",
+    description_1: "Isha Software Solutions helps businesses automate communication, improve marketing performance, and scale customer engagement through powerful email technologies.",
+    description_2: "Our infrastructure is built for high volume, secure delivery, and smart tracking. We focus on giving business owners and marketers absolute control over their outbound and transactional mailing systems, without vendor lock-ins or restrictive contacts billing.",
+    link_text: "Read Our Mission Story",
+    link_url: "/about",
+    smtp_rate: "99.8%",
+    sender_score: "98/100",
+    queue_latency: "< 150ms",
+    queue_latency_pct: "10"
+  };
+  let displayBenefits = null;
+  let displayStats = null;
+  let displayTestimonials = null;
+  let displayFaqs = null;
+
   try {
-    const [servicesRes, slidesRes] = await Promise.all([
+    const [
+      servicesRes, 
+      slidesRes,
+      aboutRes,
+      benefitsRes,
+      statsRes,
+      testimonialsRes,
+      faqsRes
+    ] = await Promise.all([
       supabase.from('services').select('*').order('created_at', { ascending: true }),
-      supabase.from('hero_slides').select('*').order('order_index', { ascending: true })
+      supabase.from('hero_slides').select('*').order('order_index', { ascending: true }),
+      supabase.from('about_company').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('benefits').select('*').order('order_index', { ascending: true }),
+      supabase.from('stats').select('*').order('order_index', { ascending: true }),
+      supabase.from('testimonials').select('*').order('order_index', { ascending: true }),
+      supabase.from('faqs').select('*').order('order_index', { ascending: true })
     ]);
 
     if (!servicesRes.error && servicesRes.data && servicesRes.data.length > 0) {
@@ -74,6 +101,21 @@ export default async function Home() {
     }
     if (!slidesRes.error && slidesRes.data && slidesRes.data.length > 0) {
       heroSlides = slidesRes.data;
+    }
+    if (!aboutRes.error && aboutRes.data) {
+      displayAbout = aboutRes.data;
+    }
+    if (!benefitsRes.error && benefitsRes.data && benefitsRes.data.length > 0) {
+      displayBenefits = benefitsRes.data;
+    }
+    if (!statsRes.error && statsRes.data && statsRes.data.length > 0) {
+      displayStats = statsRes.data;
+    }
+    if (!testimonialsRes.error && testimonialsRes.data && testimonialsRes.data.length > 0) {
+      displayTestimonials = testimonialsRes.data;
+    }
+    if (!faqsRes.error && faqsRes.data && faqsRes.data.length > 0) {
+      displayFaqs = faqsRes.data;
     }
   } catch (err) {
     console.error('Error fetching database content:', err);
@@ -90,22 +132,22 @@ export default async function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div data-aos="fade-right">
               <span className="text-primary font-bold text-xs tracking-widest uppercase py-1 px-3 bg-primary/10 rounded-full">
-                About The Company
+                {displayAbout.badge}
               </span>
               <h2 className="text-3xl md:text-4xl font-extrabold text-text-dark mt-4 mb-6 leading-tight">
-                Empowering Smart Businesses with Advanced Email Solutions
+                {displayAbout.title}
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                Isha Software Solutions helps businesses automate communication, improve marketing performance, and scale customer engagement through powerful email technologies.
+                {displayAbout.description_1}
               </p>
               <p className="text-slate-600 text-base leading-relaxed mb-8">
-                Our infrastructure is built for high volume, secure delivery, and smart tracking. We focus on giving business owners and marketers absolute control over their outbound and transactional mailing systems, without vendor lock-ins or restrictive contacts billing.
+                {displayAbout.description_2}
               </p>
               <Link 
-                href="/about" 
+                href={displayAbout.link_url || "/about"} 
                 className="inline-flex items-center space-x-2 font-bold text-primary hover:text-primary-hover group transition-colors"
               >
-                <span>Read Our Mission Story</span>
+                <span>{displayAbout.link_text || "Read Our Mission Story"}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -125,28 +167,28 @@ export default async function Home() {
                   <div>
                     <div className="flex justify-between text-sm font-bold text-text-dark mb-2">
                       <span>SMTP Delivery Rate</span>
-                      <span className="text-highlight">99.8%</span>
+                      <span className="text-highlight">{displayAbout.smtp_rate}</span>
                     </div>
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary to-highlight rounded-full" style={{ width: '99.8%' }} />
+                      <div className="h-full bg-gradient-to-r from-primary to-highlight rounded-full" style={{ width: displayAbout.smtp_rate?.includes('%') ? displayAbout.smtp_rate : `${displayAbout.smtp_rate}%` }} />
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-sm font-bold text-text-dark mb-2">
                       <span>Sender Score Reputation</span>
-                      <span className="text-primary">98/100</span>
+                      <span className="text-primary">{displayAbout.sender_score}</span>
                     </div>
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full" style={{ width: '98%' }} />
+                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full" style={{ width: `${parseFloat(displayAbout.sender_score) || 98}%` }} />
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-sm font-bold text-text-dark mb-2">
                       <span>Queue Latency</span>
-                      <span className="text-secondary">&lt; 150ms</span>
+                      <span className="text-secondary">{displayAbout.queue_latency}</span>
                     </div>
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-secondary to-accent rounded-full" style={{ width: '10%' }} />
+                      <div className="h-full bg-gradient-to-r from-secondary to-accent rounded-full" style={{ width: `${parseFloat(displayAbout.queue_latency_pct) || 10}%` }} />
                     </div>
                   </div>
                 </div>
@@ -204,8 +246,10 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {whyChooseUs.map((benefit, index) => {
-              const Icon = benefit.icon;
+            {(displayBenefits || whyChooseUs).map((benefit, index) => {
+              const IconComponent = benefit.icon || Lucide[benefit.icon_name] || Lucide.ShieldCheck;
+              const title = benefit.title;
+              const description = benefit.desc || benefit.description;
               return (
                 <div 
                   key={index} 
@@ -214,13 +258,13 @@ export default async function Home() {
                   data-aos-delay={index * 100}
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                    <Icon className="w-6 h-6" />
+                    <IconComponent className="w-6 h-6" />
                   </div>
                   <h3 className="text-xl font-bold text-text-dark mb-2 group-hover:text-primary transition-colors">
-                    {benefit.title}
+                    {title}
                   </h3>
                   <p className="text-slate-500 text-sm leading-relaxed">
-                    {benefit.desc}
+                    {description}
                   </p>
                 </div>
               );
@@ -230,13 +274,13 @@ export default async function Home() {
       </section>
 
       {/* 5. Statistics Counter */}
-      <StatsCounter />
+      <StatsCounter initialStats={displayStats} />
 
       {/* 6. Testimonials */}
-      <Testimonials />
+      <Testimonials initialTestimonials={displayTestimonials} />
 
       {/* 7. FAQ Accordion */}
-      <FaqSection />
+      <FaqSection initialFaqs={displayFaqs} />
 
       {/* 8. Call To Action (Lead Gen) */}
       <section className="py-20 relative bg-white">

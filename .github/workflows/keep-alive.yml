@@ -1,0 +1,15 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every 3 days (e.g. Monday, Thursday, etc.)
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive API Endpoint
+        run: |
+          curl -s -f -X GET "https://ishasoftwaresolution.com/api/cron/keep-alive" || echo "Warning: Keep-alive endpoint call failed."

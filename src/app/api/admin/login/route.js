@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { supabase } from '../../../../lib/supabase';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@ishasoftware.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'palamakularaju@gmail.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'adminpass123';
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'isha_admin_fallback_secret';
 
@@ -14,13 +15,33 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || password !== ADMIN_PASSWORD) {
+    // Try fetching credentials from database settings
+    let activeEmail = ADMIN_EMAIL;
+    let activePassword = ADMIN_PASSWORD;
+
+    try {
+      const [emailRes, passRes] = await Promise.all([
+        supabase.from('admin_settings').select('value').eq('key', 'admin_email').maybeSingle(),
+        supabase.from('admin_settings').select('value').eq('key', 'admin_password').maybeSingle()
+      ]);
+
+      if (emailRes.data?.value) {
+        activeEmail = emailRes.data.value;
+      }
+      if (passRes.data?.value) {
+        activePassword = passRes.data.value;
+      }
+    } catch (dbErr) {
+      console.warn('Could not query admin_settings from DB, using fallback credentials.', dbErr.message);
+    }
+
+    if (email.toLowerCase() !== activeEmail.toLowerCase() || password !== activePassword) {
       return NextResponse.json({ error: 'Invalid credentials. Access denied.' }, { status: 401 });
     }
 
     // Sign a short-lived admin JWT
     const token = jwt.sign(
-      { email: ADMIN_EMAIL, role: 'admin' },
+      { email: activeEmail, role: 'admin' },
       ADMIN_JWT_SECRET,
       { expiresIn: '8h' }
     );
